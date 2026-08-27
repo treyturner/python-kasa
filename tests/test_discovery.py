@@ -368,6 +368,42 @@ AUTHENTICATION_DATA_KLAP = {
 }
 
 
+@pytest.mark.parametrize(
+    ("device_type", "encrypt_type", "new_klap", "expected_klap_version"),
+    [
+        pytest.param("IOT.SMARTPLUGSWITCH", "KLAP", 1, 1, id="iot-versioned"),
+        pytest.param("IOT.SMARTPLUGSWITCH", "KLAP", 0, None, id="iot-original"),
+        pytest.param("IOT.SMARTPLUGSWITCH", "AES", 1, None, id="iot-non-klap"),
+        pytest.param("SMART.TAPOPLUG", "KLAP", 1, None, id="smart-klap"),
+    ],
+)
+def test_new_klap_connection_parameter(
+    device_type: str,
+    encrypt_type: str,
+    new_klap: int,
+    expected_klap_version: int | None,
+) -> None:
+    """Only IOT KLAP discovery uses new_klap to select its handshake."""
+    result = DiscoveryResult.from_dict(
+        {
+            "device_type": device_type,
+            "device_model": "MODEL(US)",
+            "device_id": "xx",
+            "ip": "127.0.0.1",
+            "mac": "12-34-56-78-90-AB",
+            "mgt_encrypt_schm": {
+                "is_support_https": False,
+                "encrypt_type": encrypt_type,
+                "new_klap": new_klap,
+            },
+        }
+    )
+
+    connection_parameters = Discover._get_connection_parameters(result)
+
+    assert connection_parameters.klap_version == expected_klap_version
+
+
 @new_discovery
 async def test_discover_single_authentication(discovery_mock, mocker):
     """Make sure that discover_single handles authenticating devices correctly."""
