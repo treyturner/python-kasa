@@ -897,12 +897,19 @@ class Discover:
                 discovery_result=discovery_result.to_dict(),
                 host=discovery_result.ip,
             )
+
+        # new_klap selects the IOT KLAP handshake independently of login version.
+        klap_version = None
+        if type_.startswith("IOT.") and encrypt_type == DeviceEncryptionType.Klap.value:
+            klap_version = encrypt_schm.new_klap or None
+
         return DeviceConnectionParameters.from_values(
             type_,
             encrypt_type,
             login_version=login_version,
             https=encrypt_schm.is_support_https,
             http_port=encrypt_schm.http_port,
+            klap_version=klap_version,
         )
 
     @staticmethod
@@ -1014,6 +1021,7 @@ class EncryptionScheme(_DiscoveryBaseMixin):
     encrypt_type: str | None = None
     http_port: int | None = None
     lv: int | None = None
+    new_klap: int | None = None
 
 
 @dataclass

@@ -24,6 +24,15 @@ PLUG_KLAP_CONFIG = DeviceConfig(
         DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Klap, login_version=2
     ),
 )
+IOT_PLUG_KLAP_V2_CONFIG = DeviceConfig(
+    host="127.0.0.1",
+    connection_type=DeviceConnectionParameters(
+        DeviceFamily.IotSmartPlugSwitch,
+        DeviceEncryptionType.Klap,
+        login_version=2,
+        klap_version=1,
+    ),
+)
 CAMERA_AES_CONFIG = DeviceConfig(
     host="127.0.0.1",
     connection_type=DeviceConnectionParameters(
@@ -48,6 +57,7 @@ async def test_serialization():
     [
         ("deviceconfig_plug-xor.json", PLUG_XOR_CONFIG),
         ("deviceconfig_plug-klap.json", PLUG_KLAP_CONFIG),
+        ("deviceconfig_iot-plug-klap-v2.json", IOT_PLUG_KLAP_V2_CONFIG),
         ("deviceconfig_camera-aes-https.json", CAMERA_AES_CONFIG),
     ],
     ids=lambda arg: arg.split("_")[-1] if isinstance(arg, str) else "",

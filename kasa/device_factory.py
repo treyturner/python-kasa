@@ -221,6 +221,13 @@ def get_protocol(config: DeviceConfig, *, strict: bool = False) -> BaseProtocol 
         + "."
         + ctype.encryption_type.value
         + (".HTTPS" if ctype.https else "")
+        + (
+            ".NEW_KLAP"
+            if protocol_name == "IOT"
+            and ctype.encryption_type is DeviceEncryptionType.Klap
+            and ctype.klap_version
+            else ""
+        )
     )
 
     _LOGGER.debug("Finding transport for %s", protocol_transport_key)
@@ -229,6 +236,7 @@ def get_protocol(config: DeviceConfig, *, strict: bool = False) -> BaseProtocol 
     ] = {
         "IOT.XOR": (IotProtocol, XorTransport),
         "IOT.KLAP": (IotProtocol, KlapTransport),
+        "IOT.KLAP.NEW_KLAP": (IotProtocol, KlapTransportV2),
         "SMART.AES": (SmartProtocol, AesTransport),
         "SMART.KLAP": (SmartProtocol, KlapTransportV2),
         "SMART.KLAP.HTTPS": (SmartProtocol, KlapTransportV2),
