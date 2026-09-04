@@ -37,6 +37,7 @@ from kasa.deviceconfig import (
     DeviceFamily,
 )
 from kasa.discover import DiscoveryResult
+from kasa.iot import IotStrip
 from kasa.transports import (
     AesTransport,
     BaseTransport,
@@ -49,6 +50,8 @@ from kasa.transports import (
 )
 
 from .conftest import DISCOVERY_MOCK_IP
+from .device_fixtures import get_fixture_info
+from .fakeprotocol_iot import FakeIotProtocol
 
 # Device Factory tests are not relevant for real devices which run against
 # a single device that has already been created via the factory.
@@ -97,6 +100,32 @@ async def test_connect(
     assert close_mock.call_count == 0
     await dev.disconnect()
     assert close_mock.call_count == 1
+
+
+async def test_connect_iot_klap_uses_sysinfo_to_detect_strip(mocker):
+    """Detect an IOT strip from sysinfo when connecting over KLAP."""
+    fixture_info = get_fixture_info("HS300(US)_2.0_1.0.12.json", "IOT")
+    assert fixture_info is not None
+    fake_protocol = FakeIotProtocol(fixture_info.data, fixture_info.name)
+
+    async def _query(self, request, retry_count=3):
+        return await fake_protocol.query(request, retry_count)
+
+    mocker.patch("kasa.IotProtocol.query", new=_query)
+    config = DeviceConfig(
+        host=DISCOVERY_MOCK_IP,
+        credentials=Credentials("foo", "bar"),
+        connection_type=DeviceConnectionParameters(
+            device_family=DeviceFamily.IotSmartPlugSwitch,
+            encryption_type=DeviceEncryptionType.Klap,
+            klap_version=1,
+        ),
+    )
+
+    dev = await connect(config=config)
+
+    assert isinstance(dev, IotStrip)
+    assert len(dev.children) == 6
 
 
 @pytest.mark.parametrize("custom_port", [123, None])
